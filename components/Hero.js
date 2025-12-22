@@ -9,10 +9,12 @@ import {
 import { useSelector, useDispatch } from "react-redux";
 import { parseEther, formatEther } from "viem";
 import { toast } from "react-toastify";
+import UserPosition from "../components/UserPosition";
 
 export default function Hero() {
 	const dispatch = useDispatch();
 	const { abi } = useSelector((data) => data.data);
+	const [userPositionKey, setUserPositionKey] = useState(0);
 	const { address, isConnected } = useAccount();
 	const {
 		data: balance,
@@ -151,6 +153,7 @@ export default function Hero() {
 
 			toast.success("Transaction Success...");
 			setAddCollateral(0);
+			setUserPositionKey((k) => k + 1);
 		} catch (e) {
 			toast.error(
 				e.shortMessage || e.message || e.cause.shortMessage || e.cause.message
@@ -176,6 +179,7 @@ export default function Hero() {
 
 			toast.success("Transaction Success...");
 			setRemoveCollateral(0);
+			setUserPositionKey((k) => k + 1);
 		} catch (e) {
 			toast.error(
 				e.shortMessage || e.message || e.cause.shortMessage || e.cause.message
@@ -201,6 +205,7 @@ export default function Hero() {
 
 			toast.success("Transaction Success...");
 			setBorrow(0);
+			setUserPositionKey((k) => k + 1);
 		} catch (e) {
 			toast.error(
 				e.shortMessage || e.message || e.cause.shortMessage || e.cause.message
@@ -233,6 +238,7 @@ export default function Hero() {
 
 			toast.success("Transaction Success...");
 			setRepay(0);
+			setUserPositionKey((k) => k + 1);
 		} catch (e) {
 			toast.error(
 				e.shortMessage || e.message || e.cause.shortMessage || e.cause.message
@@ -259,6 +265,7 @@ export default function Hero() {
 
 			toast.success("Transaction Success...");
 			setEthToToken(0);
+			setUserPositionKey((k) => k + 1);
 		} catch (e) {
 			toast.error(
 				e.shortMessage || e.message || e.cause.shortMessage || e.cause.message
@@ -292,6 +299,7 @@ export default function Hero() {
 
 			toast.success("Transaction Success...");
 			setTokenToEth(0);
+			setUserPositionKey((k) => k + 1);
 		} catch (e) {
 			toast.error(
 				e.shortMessage || e.message || e.cause.shortMessage || e.cause.message
@@ -431,6 +439,9 @@ export default function Hero() {
 						/>
 						<button onClick={handleTokenToEth}>Submit</button>
 					</div>
+				</div>
+				<div>
+					<UserPosition key={userPositionKey} />
 				</div>
 			</motion.div>
 		</div>
