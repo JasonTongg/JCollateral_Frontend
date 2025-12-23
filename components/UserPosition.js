@@ -157,27 +157,45 @@ export default function CollateralAddedHistory({
 	---------------------------------- */
 	const positionsByUser = useMemo(() => {
 		if (!positionsData) return {};
-		let totalCollateral = 0;
-		let totalBorrowed = 0;
 
-		const map = {};
-		userAddresses.forEach((addr, i) => {
+		let totalCollateral = 0n;
+		let totalBorrowed = 0n;
+
+		const entries = userAddresses.map((addr, i) => {
 			const base = i * 4;
 
-			map[addr] = {
-				collateral: positionsData[base]?.result ?? 0n,
-				borrowed: positionsData[base + 1]?.result ?? 0n,
-				ratio: positionsData[base + 2]?.result ?? 0n,
-				isLiquidatable: positionsData[base + 3]?.result ?? false,
-			};
+			const collateral = positionsData[base]?.result ?? 0n;
+			const borrowed = positionsData[base + 1]?.result ?? 0n;
+			const ratio = positionsData[base + 2]?.result ?? 0n;
+			const isLiquidatable = positionsData[base + 3]?.result ?? false;
 
-			totalCollateral += Number(map[addr].collateral);
-			totalBorrowed += Number(map[addr].borrowed);
+			totalCollateral += collateral;
+			totalBorrowed += borrowed;
+
+			return [
+				addr,
+				{
+					collateral,
+					borrowed,
+					ratio,
+					isLiquidatable,
+				},
+			];
 		});
 
-		setTotalBorrowed(formatEther(BigInt(totalBorrowed)));
-		setTotalCollateral(formatEther(BigInt(totalCollateral)));
-		return map;
+		// sort by ratio ascending
+		entries.sort((a, b) => {
+			if (a[1].ratio < b[1].ratio) return -1;
+			if (a[1].ratio > b[1].ratio) return 1;
+			return 0;
+		});
+
+		console.log(entries);
+
+		setTotalBorrowed(formatEther(totalBorrowed));
+		setTotalCollateral(formatEther(totalCollateral));
+
+		return Object.fromEntries(entries);
 	}, [positionsData, userAddresses]);
 
 	/* ----------------------------------
@@ -225,9 +243,7 @@ export default function CollateralAddedHistory({
 		<div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 			<h2>Collateral Users (Live)</h2>
 
-			{userAddresses.map((user) => {
-				const pos = positionsByUser[user];
-
+			{Object.entries(positionsByUser).map(([user, pos], index) => {
 				return (
 					<div
 						key={user}
