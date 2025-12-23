@@ -5,6 +5,7 @@ import { createPublicClient, http, parseAbiItem, formatEther } from "viem";
 import { useSelector } from "react-redux";
 import { useReadContracts, useWriteContract } from "wagmi";
 import { toast } from "react-toastify";
+import { MdElectricBolt } from "react-icons/md";
 
 const LENDING_ADDRESS = process.env.NEXT_PUBLIC_LENDING_ADDRESS;
 
@@ -239,57 +240,63 @@ export default function CollateralAddedHistory({
 	if (loading) return <p>Loading collateral users…</p>;
 	if (error) return <p style={{ color: "red" }}>{error}</p>;
 
-	return (
-		<div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-			<h2>Collateral Users (Live)</h2>
+	function formatNumber(num) {
+		if (num === null || num === undefined) return "0";
 
+		const n = Number(num);
+		const abs = Math.abs(n);
+
+		if (abs >= 1e12) return (n / 1e12).toFixed(2).replace(/\.00$/, "") + "T";
+		if (abs >= 1e9) return (n / 1e9).toFixed(2).replace(/\.00$/, "") + "B";
+		if (abs >= 1e6) return (n / 1e6).toFixed(2).replace(/\.00$/, "") + "M";
+		if (abs >= 1e3) return (n / 1e3).toFixed(2).replace(/\.00$/, "") + "K";
+
+		return n.toFixed(2).toString();
+	}
+
+	return (
+		<div className="flex flex-col items-center justify-center gap-2 w-full px-12">
+			<div className="grid grid-cols-6 w-full [&>*]:text-gray-400 border-b-[1px] py-[1rem] border-[rgba(255,255,255,.1)] px-4">
+				<p>Address</p>
+				<p>Collateral (ETH)</p>
+				<p>Borrowed (JCOL)</p>
+				<p>Position Ratio</p>
+				<p>Health Factor</p>
+				<p className="text-center">Action</p>
+			</div>
 			{Object.entries(positionsByUser).map(([user, pos], index) => {
 				return (
 					<div
 						key={user}
-						style={{
-							border: "1px solid #ccc",
-							padding: 12,
-							borderRadius: 6,
-						}}
+						className="grid grid-cols-6 w-full border-b-[1px] py-[1rem] border-[rgba(255,255,255,.1)] px-4 hover:bg-[rgba(255,255,255,.01)]"
 					>
-						<div>
-							<strong>User:</strong> {user}
+						<div className="font-bold text-base">
+							{user.slice(0, 6)}...{user.slice(-6)}
+						</div>
+						<div className="font-bold text-base text-green-400">
+							{formatNumber(formatEther(pos.collateral))} ETH
+						</div>
+						<div className="font-bold text-base text-blue-400">
+							{formatNumber(formatEther(pos.borrowed))} JCOL
+						</div>
+						<div className={`font-bold text-base w-fit h-fit py-1 px-2 rounded-[100px] ${Number(formatEther(String(pos.ratio) + "00")) >= 150 ? " text-green-400 bg-[#113839]" : Number(formatEther(String(pos.ratio) + "00")) < 150 && Number(formatEther(String(pos.ratio) + "00")) > 120 ? " text-yellow-400 bg-[#393711]" : " text-red-400 bg-[#391111]"}`}>
+							{Number(formatEther(String(pos.ratio) + "00")).toFixed(2) > 999 ? ">999" : Number(formatEther(String(pos.ratio) + "00")).toFixed(2)}%
+						</div>
+						<div className={`font-bold text-base w-fit h-fit py-1 px-2 rounded-[100px] ${Number(formatEther(String(pos.ratio) + "00")) > 150 ? " text-green-400 bg-[#113839]" : Number(formatEther(String(pos.ratio) + "00")) < 150 && Number(formatEther(String(pos.ratio) + "00")) > 120 ? " text-yellow-400 bg-[#393711]" : " text-red-400 bg-[#391111]"}`}>
+							{(Number(formatEther(String(pos.ratio) + "00")) / 120).toFixed(2) > 999 ? ">999" : (Number(formatEther(String(pos.ratio) + "00")) / 120).toFixed(2)}
 						</div>
 
-						{pos && (
-							<>
-								<div>
-									<strong>Total Collateral:</strong>{" "}
-									{formatEther(pos.collateral)}
-								</div>
-								<div>
-									<strong>Total Borrowed:</strong> {formatEther(pos.borrowed)}
-								</div>
-								<div>
-									<strong>Position Ratio:</strong>{" "}
-									{Number(formatEther(String(pos.ratio) + "00")).toFixed(2)}%
-								</div>
-
-								{pos.isLiquidatable ? (
-									<button
-										onClick={() => handleLiquidate(user, pos.borrowed)}
-										disabled={liquidatePending}
-									>
-										{liquidatePending ? "Liquidating..." : "Liquidate"}
-									</button>
-								) : (
-									<button disabled className='opacity-25'>
-										No Action
-									</button>
-								)}
-							</>
-						)}
+						<button
+							onClick={() => handleLiquidate(user, pos.borrowed)}
+							disabled={!pos.isLiquidatable}
+							className="text-start disabled:opacity-30 bg-red-600 text-white py-2 px-4 text-center flex items-center justify-center gap-1 rounded-[10px]"
+						>
+							<MdElectricBolt />
+							{liquidatePending ? "Liquidating..." : "Liquidate"}
+						</button>
 					</div>
 				);
 			})}
-
-			{isPending && <p>Updating positions…</p>}
 		</div>
 	);
 }
