@@ -29,6 +29,8 @@ export default function Hero() {
 	const [repay, setRepay] = useState(0);
 	const [ethToToken, setEthToToken] = useState(0);
 	const [tokenToEth, setTokenToEth] = useState(0);
+	const [totalCollateral, setTotalCollateral] = useState(0);
+	const [totalBorrowed, setTotalBorrowed] = useState(0);
 
 	const {
 		data: readJcolBalance,
@@ -90,12 +92,27 @@ export default function Hero() {
 		args: [address],
 	});
 
+	const {
+		data: readCurrentPrice,
+		isPending: readCurrentPricePending,
+		error: readCurrentPriceError,
+		refetch: refetchCurrentPrice,
+	} = useReadContract({
+		query: {
+			enabled: isConnected && !!address,
+		},
+		address: process.env.NEXT_PUBLIC_JCOLDEX_ADDRESS,
+		abi: abi.JCOLDEX_ABI,
+		functionName: "currentPrice",
+	});
+
 	function refetchAll() {
 		refetchUserRatio();
 		refetchUserBorrowed();
 		refetchUserCollateral();
 		refetchJcolBalance();
 		refetchNativeBalance();
+		refetchCurrentPrice();
 	}
 
 	const {
@@ -284,6 +301,7 @@ export default function Hero() {
 		refetchUserRatio();
 		refetchUserCollateral();
 		refetchNativeBalance();
+		refetchCurrentPrice();
 	};
 	const handleTokenToEth = async () => {
 		if (!address) return;
@@ -318,6 +336,7 @@ export default function Hero() {
 		refetchUserRatio();
 		refetchUserCollateral();
 		refetchNativeBalance();
+		refetchCurrentPrice();
 	};
 
 	function formatNumber(num) {
@@ -378,6 +397,28 @@ export default function Hero() {
 								  999
 									? "999"
 									: Number(formatEther(String(readUserRatio) + "00")).toFixed(2)
+								: 0}
+							%
+						</p>
+						<p>
+							Current Price:{" "}
+							{readCurrentPrice
+								? formatNumber(formatEther(String(readCurrentPrice)))
+								: 0}
+						</p>
+						<p>Total Collateral: {totalCollateral ? totalCollateral : 0}</p>
+						<p>Total Borrowed: {totalBorrowed ? totalBorrowed : 0}</p>
+						<p>
+							Total BCollateral / Borrowed:{" "}
+							{totalBorrowed && totalCollateral && readCurrentPrice
+								? (
+										Number(
+											formatEther(
+												(Number(totalCollateral) * Number(readCurrentPrice)) /
+													Number(totalBorrowed)
+											)
+										) * 100
+								  ).toFixed(2)
 								: 0}
 							%
 						</p>
@@ -449,7 +490,12 @@ export default function Hero() {
 					</div>
 				</div>
 				<div>
-					<UserPosition key={userPositionKey} refetchAll={refetchAll} />
+					<UserPosition
+						key={userPositionKey}
+						refetchAll={refetchAll}
+						setTotalCollateral={setTotalCollateral}
+						setTotalBorrowed={setTotalBorrowed}
+					/>
 				</div>
 			</motion.div>
 		</div>

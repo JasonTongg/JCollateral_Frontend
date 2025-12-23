@@ -27,7 +27,11 @@ const COLLATERAL_EVENT = parseAbiItem(
 	"event CollateralAdded(address indexed user, uint256 indexed amount, uint256 price)"
 );
 
-export default function CollateralAddedHistory({ refetchAll }) {
+export default function CollateralAddedHistory({
+	refetchAll,
+	setTotalCollateral,
+	setTotalBorrowed,
+}) {
 	const { abi } = useSelector((state) => state.data);
 
 	const [events, setEvents] = useState([]);
@@ -153,6 +157,8 @@ export default function CollateralAddedHistory({ refetchAll }) {
 	---------------------------------- */
 	const positionsByUser = useMemo(() => {
 		if (!positionsData) return {};
+		let totalCollateral = 0;
+		let totalBorrowed = 0;
 
 		const map = {};
 		userAddresses.forEach((addr, i) => {
@@ -164,9 +170,13 @@ export default function CollateralAddedHistory({ refetchAll }) {
 				ratio: positionsData[base + 2]?.result ?? 0n,
 				isLiquidatable: positionsData[base + 3]?.result ?? false,
 			};
+
+			totalCollateral += Number(map[addr].collateral);
+			totalBorrowed += Number(map[addr].borrowed);
 		});
 
-		console.log(map);
+		setTotalBorrowed(formatEther(BigInt(totalBorrowed)));
+		setTotalCollateral(formatEther(BigInt(totalCollateral)));
 		return map;
 	}, [positionsData, userAddresses]);
 
