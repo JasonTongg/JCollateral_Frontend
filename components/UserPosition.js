@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createPublicClient, http, parseAbiItem, formatEther } from "viem";
 import { useSelector } from "react-redux";
 import { useReadContracts, useWriteContract } from "wagmi";
+import { toast } from "react-toastify";
 
 const LENDING_ADDRESS = process.env.NEXT_PUBLIC_LENDING_ADDRESS;
 
@@ -26,7 +27,7 @@ const COLLATERAL_EVENT = parseAbiItem(
 	"event CollateralAdded(address indexed user, uint256 indexed amount, uint256 price)"
 );
 
-export default function CollateralAddedHistory() {
+export default function CollateralAddedHistory({ refetchAll }) {
 	const { abi } = useSelector((state) => state.data);
 
 	const [events, setEvents] = useState([]);
@@ -37,6 +38,8 @@ export default function CollateralAddedHistory() {
 	   Liquidate write hook
 	---------------------------------- */
 	const { writeContractAsync: writeLiquidate, isPending: liquidatePending } =
+		useWriteContract();
+	const { writeContractAsync: writeApprove, isPending: approvePending } =
 		useWriteContract();
 
 	/* ----------------------------------
@@ -136,7 +139,11 @@ export default function CollateralAddedHistory() {
 		]);
 	}, [abi, userAddresses]);
 
-	const { data: positionsData, isPending } = useReadContracts({
+	const {
+		data: positionsData,
+		isPending,
+		refetch: refetchPositions,
+	} = useReadContracts({
 		contracts,
 		query: { enabled: contracts.length > 0 },
 	});
@@ -158,20 +165,41 @@ export default function CollateralAddedHistory() {
 				isLiquidatable: positionsData[base + 3]?.result ?? false,
 			};
 		});
+
+		console.log(map);
 		return map;
 	}, [positionsData, userAddresses]);
 
 	/* ----------------------------------
 	   Liquidate handler
 	---------------------------------- */
-	const handleLiquidate = async (user) => {
+	const handleLiquidate = async (user, amount) => {
 		try {
-			await writeLiquidate({
+			toast.info("Submitting Transaction...");
+
+			await writeApprove({
+				address: process.env.NEXT_PUBLIC_JCOL_ADDRESS,
+				abi: abi.JCOL_ABI,
+				functionName: "approve",
+				args: [LENDING_ADDRESS, amount],
+			});
+
+			const txHash = await writeLiquidate({
 				address: LENDING_ADDRESS,
 				abi: abi.Lending_ABI,
 				functionName: "liquidate",
 				args: [user],
 			});
+
+			await publicClient.waitForTransactionReceipt({
+				hash: txHash,
+			});
+
+			await refetchPositions();
+
+			refetchAll();
+
+			toast.success("Transaction Success...");
 		} catch (err) {
 			console.error(err);
 		}
@@ -219,7 +247,7 @@ export default function CollateralAddedHistory() {
 
 								{pos.isLiquidatable ? (
 									<button
-										onClick={() => handleLiquidate(user)}
+										onClick={() => handleLiquidate(user, pos.borrowed)}
 										disabled={liquidatePending}
 									>
 										{liquidatePending ? "Liquidating..." : "Liquidate"}

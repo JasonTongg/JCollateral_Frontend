@@ -90,6 +90,14 @@ export default function Hero() {
 		args: [address],
 	});
 
+	function refetchAll() {
+		refetchUserRatio();
+		refetchUserBorrowed();
+		refetchUserCollateral();
+		refetchJcolBalance();
+		refetchNativeBalance();
+	}
+
 	const {
 		writeContractAsync: writeAddCollateral,
 		isPending: addCollateralPending,
@@ -441,7 +449,7 @@ export default function Hero() {
 					</div>
 				</div>
 				<div>
-					<UserPosition key={userPositionKey} />
+					<UserPosition key={userPositionKey} refetchAll={refetchAll} />
 				</div>
 			</motion.div>
 		</div>
