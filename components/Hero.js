@@ -387,6 +387,17 @@ export default function Hero() {
 		return n.toFixed(2).toString();
 	}
 
+	useEffect(() => {
+		console.log("readCurrentPrice");
+		console.log(readCurrentPrice)
+		console.log(Number(readCurrentPrice))
+		console.log(String(readCurrentPrice))
+		console.log(formatEther(Number(readCurrentPrice)))
+		console.log(formatEther(String(readCurrentPrice)))
+		console.log(Number(formatEther(Number(readCurrentPrice))).toFixed(2))
+		console.log(Number(formatEther(String(readCurrentPrice))).toFixed(2))
+	}, [readCurrentPrice])
+
 	return (
 		<div className='w-full min-h-screen flex items-center justify-center [&>*]:text-white'>
 			<motion.div
@@ -496,7 +507,7 @@ export default function Hero() {
 							<div className="flex items-center justify-between gap-4">
 								<p >JCOL Value: </p>
 								<p className="text-white font-bold">{totalCollateral && readCurrentPrice
-									? formatNumber((Number(totalCollateral) * formatEther(Number(readCurrentPrice)))) : 0} JCOL</p>
+									? formatNumber((Number(totalCollateral) * formatEther(String(readCurrentPrice)))) : 0} JCOL</p>
 							</div>
 						</div>
 					</div>
@@ -547,7 +558,7 @@ export default function Hero() {
 						<div className="text-gray-400 bg-[#18212f] p-4 w-full flex flex-col gap-2 rounded-[10px]">
 							<div className="flex items-center justify-between gap-4">
 								<p>Exchange Rate: </p>
-								<p className="text-purple-400 font-bold">1 ETH = {readCurrentPrice ? Number(formatEther(Number(readCurrentPrice))).toFixed(2) : 0} JSOL</p>
+								<p className="text-purple-400 font-bold">1 ETH = {readCurrentPrice ? formatNumber(Number(formatEther(String(readCurrentPrice)))) : 0} JSOL</p>
 							</div>
 						</div>
 					</div>
