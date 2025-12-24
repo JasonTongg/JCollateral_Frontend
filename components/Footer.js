@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export default function Navbar() {
 	return (
-		<div className='w-full flex items-center justify-center py-2 text-white'>
+		<div className='w-full flex items-center justify-center py-6 text-white'>
 			<motion.div
 				initial={{ transform: "translateX(-100px)", opacity: 0 }}
 				whileInView={{ transform: "translateX(0px)", opacity: 1 }}

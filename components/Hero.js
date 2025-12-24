@@ -376,9 +376,9 @@ export default function Hero() {
 				whileInView={{ transform: "translateX(0px)", opacity: 1 }}
 				exit={{ transform: "translateX(-100px)", opacity: 0 }}
 				transition={{ duration: 0.5 }}
-				className='max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center gap-5 mt-24'
+				className='max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center gap-5 mt-24 w-full'
 			>
-				<div className='grid grid-cols-6 w-full gap-4'>
+				<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 w-full gap-4'>
 					<div className='bg-[#0a1621] border-[1px] border-[rgba(255,255,255,0.1)] w-full p-4 rounded-[10px] flex flex-col items-center justify-around'>
 						<p className='text-gray-400 text-lg flex items-center justify-center gap-1'>
 							<FaEthereum className='text-blue-400' />
@@ -449,7 +449,7 @@ export default function Hero() {
 						</p>
 					</div>
 				</div>
-				<div className='grid grid-cols-3 gap-4 min-h-[200px] w-full'>
+				<div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 min-h-[200px] w-full'>
 					<div className='bg-[#0a1621] border-[1px] border-[rgba(255,255,255,0.1)] w-full py-6 px-4 rounded-[10px] flex flex-col items-start justify-start gap-4'>
 						<p className='text-xl font-bold flex items-center justify-center gap-2'>
 							<PiVaultFill className="text-green-400 text-3xl" />
@@ -527,7 +527,7 @@ export default function Hero() {
 						</div>
 					</div>
 				</div>
-				<div className="bg-[#0a1621] border-[1px] border-[rgba(255,255,255,0.1)] w-full py-6 px-4 rounded-[10px] flex flex-col items-start justify-start gap-4">
+				<div className="bg-[#0a1621] border-[1px] border-[rgba(255,255,255,0.1)] w-full py-6 px-4 rounded-[10px] flex flex-col items-start justify-start gap-4 ">
 					<p className='text-xl font-bold flex items-center justify-center gap-2'>
 						<FaChartLine className="text-green-400 text-3xl" />
 						User Position History

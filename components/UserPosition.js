@@ -6,6 +6,7 @@ import { useSelector } from "react-redux";
 import { useReadContracts, useWriteContract } from "wagmi";
 import { toast } from "react-toastify";
 import { MdElectricBolt } from "react-icons/md";
+import { FaWallet } from "react-icons/fa";
 
 const LENDING_ADDRESS = process.env.NEXT_PUBLIC_LENDING_ADDRESS;
 
@@ -38,6 +39,8 @@ export default function CollateralAddedHistory({
 	const [events, setEvents] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
+	const ITEMS_PER_PAGE = 5;
+	const [currentPage, setCurrentPage] = useState(1);
 
 	/* ----------------------------------
 	   Liquidate write hook
@@ -196,7 +199,7 @@ export default function CollateralAddedHistory({
 		setTotalBorrowed(formatEther(totalBorrowed));
 		setTotalCollateral(formatEther(totalCollateral));
 
-		return Object.fromEntries(entries);
+		return Object.fromEntries([...entries]);
 	}, [positionsData, userAddresses]);
 
 	/* ----------------------------------
@@ -234,11 +237,7 @@ export default function CollateralAddedHistory({
 		}
 	};
 
-	/* ----------------------------------
-	   Render
-	---------------------------------- */
-	if (loading) return <p>Loading collateral users…</p>;
-	if (error) return <p style={{ color: "red" }}>{error}</p>;
+
 
 	function formatNumber(num) {
 		if (num === null || num === undefined) return "0";
@@ -254,49 +253,95 @@ export default function CollateralAddedHistory({
 		return n.toFixed(2).toString();
 	}
 
-	return (
-		<div className="flex flex-col items-center justify-center gap-2 w-full px-12">
-			<div className="grid grid-cols-6 w-full [&>*]:text-gray-400 border-b-[1px] py-[1rem] border-[rgba(255,255,255,.1)] px-4">
-				<p>Address</p>
-				<p>Collateral (ETH)</p>
-				<p>Borrowed (JCOL)</p>
-				<p>Position Ratio</p>
-				<p>Health Factor</p>
-				<p className="text-center">Action</p>
-			</div>
-			{Object.entries(positionsByUser).map(([user, pos], index) => {
-				return (
-					<div
-						key={user}
-						className="grid grid-cols-6 w-full border-b-[1px] py-[1rem] border-[rgba(255,255,255,.1)] px-4 hover:bg-[rgba(255,255,255,.01)]"
-					>
-						<div className="font-bold text-base">
-							{user.slice(0, 6)}...{user.slice(-6)}
-						</div>
-						<div className="font-bold text-base text-green-400">
-							{formatNumber(formatEther(pos.collateral))} ETH
-						</div>
-						<div className="font-bold text-base text-blue-400">
-							{formatNumber(formatEther(pos.borrowed))} JCOL
-						</div>
-						<div className={`font-bold text-base w-fit h-fit py-1 px-2 rounded-[100px] ${Number(formatEther(String(pos.ratio) + "00")) >= 150 ? " text-green-400 bg-[#113839]" : Number(formatEther(String(pos.ratio) + "00")) < 150 && Number(formatEther(String(pos.ratio) + "00")) > 120 ? " text-yellow-400 bg-[#393711]" : " text-red-400 bg-[#391111]"}`}>
-							{Number(formatEther(String(pos.ratio) + "00")).toFixed(2) > 999 ? ">999" : Number(formatEther(String(pos.ratio) + "00")).toFixed(2)}%
-						</div>
-						<div className={`font-bold text-base w-fit h-fit py-1 px-2 rounded-[100px] ${Number(formatEther(String(pos.ratio) + "00")) > 150 ? " text-green-400 bg-[#113839]" : Number(formatEther(String(pos.ratio) + "00")) < 150 && Number(formatEther(String(pos.ratio) + "00")) > 120 ? " text-yellow-400 bg-[#393711]" : " text-red-400 bg-[#391111]"}`}>
-							{(Number(formatEther(String(pos.ratio) + "00")) / 120).toFixed(2) > 999 ? ">999" : (Number(formatEther(String(pos.ratio) + "00")) / 120).toFixed(2)}
-						</div>
+	const paginatedEntries = useMemo(() => {
+		const entries = Object.entries(positionsByUser);
 
-						<button
-							onClick={() => handleLiquidate(user, pos.borrowed)}
-							disabled={!pos.isLiquidatable}
-							className="text-start disabled:opacity-30 bg-red-600 text-white py-2 px-4 text-center flex items-center justify-center gap-1 rounded-[10px]"
+		const start = (currentPage - 1) * ITEMS_PER_PAGE;
+		const end = start + ITEMS_PER_PAGE;
+
+		return entries.slice(start, end);
+	}, [positionsByUser, currentPage]);
+
+	const totalPages = useMemo(() => {
+		return Math.ceil(
+			Object.keys(positionsByUser).length / ITEMS_PER_PAGE
+		);
+	}, [positionsByUser]);
+
+	if (loading) return <p>Loading collateral users…</p>;
+	if (error) return <p style={{ color: "red" }}>{error}</p>;
+
+	return (
+		<div className="flex flex-col items-center justify-center gap-4 w-full">
+			<div className="flex flex-col gap-2 w-full px-0 sm:px-8 overflow-auto custom-scrollbar">
+				<div className="grid w-full min-w-[1100px] [&>*]:text-gray-400 border-b-[1px] py-[1rem] border-[rgba(255,255,255,.1)] px-4 gap-6" style={{ gridTemplateColumns: "1.5fr 1fr 1fr 1fr 1fr 1fr" }}>
+					<p>Address</p>
+					<p>Collateral (ETH)</p>
+					<p>Borrowed (JCOL)</p>
+					<p>Position Ratio</p>
+					<p>Health Factor</p>
+					<p className="text-center">Action</p>
+				</div>
+				{[...paginatedEntries].map(([user, pos], index) => {
+					return (
+						<div
+							key={user}
+							className="grid w-full min-w-[1100px] border-b-[1px] py-[1rem] border-[rgba(255,255,255,.1)] px-4 hover:bg-[rgba(255,255,255,.01)] gap-6"
+							style={{ gridTemplateColumns: "1.5fr 1fr 1fr 1fr 1fr 1fr" }}
 						>
-							<MdElectricBolt />
-							{liquidatePending ? "Liquidating..." : "Liquidate"}
-						</button>
-					</div>
-				);
-			})}
+							<div className="font-bold text-base flex items-center justify-start gap-2">
+								<div className="text-green-400 bg-[#113839] w-fit h-fit py-1 px-3 rounded-[10px]">
+									<FaWallet />
+								</div>{user.slice(0, 6)}...{user.slice(-6)}
+							</div>
+							<div className="font-bold text-base text-green-400 flex items-center justify-start">
+								{formatNumber(formatEther(pos.collateral))} ETH
+							</div>
+							<div className="font-bold text-base text-blue-400 flex items-center justify-start">
+								{formatNumber(formatEther(pos.borrowed))} JCOL
+							</div>
+							<div className={` flex items-center justify-start font-bold text-base w-fit h-fit py-1 px-2 rounded-[100px] ${Number(formatEther(String(pos.ratio) + "00")) >= 150 ? " text-green-400 bg-[#113839]" : Number(formatEther(String(pos.ratio) + "00")) < 150 && Number(formatEther(String(pos.ratio) + "00")) > 120 ? " text-yellow-400 bg-[#393711]" : " text-red-400 bg-[#391111]"}`}>
+								{Number(formatEther(String(pos.ratio) + "00")).toFixed(2) > 999 ? ">999" : Number(formatEther(String(pos.ratio) + "00")).toFixed(2)}%
+							</div>
+							<div className={` flex items-center justify-start font-bold text-base w-fit h-fit py-1 px-2 rounded-[100px] ${Number(formatEther(String(pos.ratio) + "00")) > 150 ? " text-green-400 bg-[#113839]" : Number(formatEther(String(pos.ratio) + "00")) < 150 && Number(formatEther(String(pos.ratio) + "00")) > 120 ? " text-yellow-400 bg-[#393711]" : " text-red-400 bg-[#391111]"}`}>
+								{(Number(formatEther(String(pos.ratio) + "00")) / 120).toFixed(2) > 999 ? ">999" : (Number(formatEther(String(pos.ratio) + "00")) / 120).toFixed(2)}
+							</div>
+
+							<button
+								onClick={() => handleLiquidate(user, pos.borrowed)}
+								disabled={!pos.isLiquidatable}
+								className=" disabled:opacity-30 bg-red-600 text-white py-2 px-4 text-center flex items-center justify-center gap-1 rounded-[10px]"
+							>
+								<MdElectricBolt />
+								{liquidatePending ? "Liquidating..." : "Liquidate"}
+							</button>
+						</div>
+					);
+				})}
+			</div>
+			<div className="flex items-center justify-end gap-3 py-4">
+				<button
+					onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+					disabled={currentPage === 1}
+					className="px-4 py-2 rounded-md bg-[#113839] text-green-400 disabled:opacity-30"
+				>
+					Prev
+				</button>
+
+				<span className="text-sm text-gray-400">
+					Page {currentPage} of {totalPages}
+				</span>
+
+				<button
+					onClick={() =>
+						setCurrentPage((p) => Math.min(p + 1, totalPages))
+					}
+					disabled={currentPage === totalPages}
+					className="px-4 py-2 rounded-md bg-[#113839] text-green-400 disabled:opacity-30"
+				>
+					Next
+				</button>
+			</div>
 		</div>
 	);
 }

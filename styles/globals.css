@@ -44,3 +44,31 @@ img {
 .MuiList-padding {
 	padding: 0 !important;
 }
+
+/* width / height */
+.custom-scrollbar::-webkit-scrollbar {
+	height: 8px; /* horizontal */
+	width: 8px; /* vertical */
+}
+
+/* track */
+.custom-scrollbar::-webkit-scrollbar-track {
+	background: #0a1621;
+	border-radius: 10px;
+}
+
+/* thumb */
+.custom-scrollbar::-webkit-scrollbar-thumb {
+	background: linear-gradient(180deg, #22c55e, #16a34a);
+	border-radius: 10px;
+}
+
+/* thumb hover */
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+	background: linear-gradient(180deg, #4ade80, #22c55e);
+}
+
+.custom-scrollbar {
+	scrollbar-width: thin;
+	scrollbar-color: #22c55e #0a1621;
+}
