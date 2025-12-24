@@ -200,7 +200,6 @@ export default function CollateralAddedHistory({
 			return 0;
 		});
 
-		console.log(entries);
 
 		setTotalBorrowed(formatEther(totalBorrowed));
 		setTotalCollateral(formatEther(totalCollateral));
@@ -240,8 +239,10 @@ export default function CollateralAddedHistory({
 			refetchAll();
 
 			toast.dark("Transaction Success...");
-		} catch (err) {
-			console.error(err);
+		} catch (e) {
+			toast.dark(
+				e.shortMessage || e.message || e.cause.shortMessage || e.cause.message
+			);
 		}
 	};
 

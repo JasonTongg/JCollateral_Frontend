@@ -387,17 +387,6 @@ export default function Hero() {
 		return n.toFixed(2).toString();
 	}
 
-	useEffect(() => {
-		console.log("readCurrentPrice");
-		console.log(readCurrentPrice)
-		console.log(Number(readCurrentPrice))
-		console.log(String(readCurrentPrice))
-		console.log(formatEther(Number(readCurrentPrice)))
-		console.log(formatEther(String(readCurrentPrice)))
-		console.log(Number(formatEther(Number(readCurrentPrice))).toFixed(2))
-		console.log(Number(formatEther(String(readCurrentPrice))).toFixed(2))
-	}, [readCurrentPrice])
-
 	return (
 		<div className='w-full min-h-screen flex items-center justify-center [&>*]:text-white'>
 			<motion.div
