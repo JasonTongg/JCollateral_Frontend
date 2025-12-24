@@ -7,6 +7,7 @@ import { useReadContracts, useWriteContract } from "wagmi";
 import { toast } from "react-toastify";
 import { MdElectricBolt } from "react-icons/md";
 import { FaWallet } from "react-icons/fa";
+import { sepolia } from "wagmi/chains";
 
 const LENDING_ADDRESS = process.env.NEXT_PUBLIC_LENDING_ADDRESS;
 
@@ -21,7 +22,7 @@ const local = {
 };
 
 const publicClient = createPublicClient({
-	chain: local,
+	chain: sepolia,
 	transport: http(),
 });
 
@@ -58,11 +59,16 @@ export default function CollateralAddedHistory({
 
 		async function init() {
 			try {
+				const latestBlock = await publicClient.getBlockNumber();
+
+				const fromBlock =
+					latestBlock > 9000n ? latestBlock - 9000n : 0n;
+
 				const logs = await publicClient.getLogs({
 					address: LENDING_ADDRESS,
 					event: COLLATERAL_EVENT,
-					fromBlock: 0n,
-					toBlock: "latest",
+					fromBlock,
+					toBlock: latestBlock,
 				});
 
 				setEvents(
@@ -207,14 +213,16 @@ export default function CollateralAddedHistory({
 	---------------------------------- */
 	const handleLiquidate = async (user, amount) => {
 		try {
-			toast.info("Submitting Transaction...");
+			toast.dark("Submitting Transaction...");
 
-			await writeApprove({
+			const hash = await writeApprove({
 				address: process.env.NEXT_PUBLIC_JCOL_ADDRESS,
 				abi: abi.JCOL_ABI,
 				functionName: "approve",
 				args: [LENDING_ADDRESS, amount],
 			});
+
+			await publicClient.waitForTransactionReceipt({ hash });
 
 			const txHash = await writeLiquidate({
 				address: LENDING_ADDRESS,
@@ -231,7 +239,7 @@ export default function CollateralAddedHistory({
 
 			refetchAll();
 
-			toast.success("Transaction Success...");
+			toast.dark("Transaction Success...");
 		} catch (err) {
 			console.error(err);
 		}

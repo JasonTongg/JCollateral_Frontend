@@ -5,6 +5,7 @@ import {
 	useBalance,
 	useReadContract,
 	useWriteContract,
+	usePublicClient
 } from "wagmi";
 import { useSelector, useDispatch } from "react-redux";
 import { parseEther, formatEther } from "viem";
@@ -21,6 +22,7 @@ import { FaChartLine } from "react-icons/fa6";
 
 export default function Hero() {
 	const dispatch = useDispatch();
+	const publicClient = usePublicClient();
 	const { abi } = useSelector((data) => data.data);
 	const [userPositionKey, setUserPositionKey] = useState(0);
 	const { address, isConnected } = useAccount();
@@ -184,19 +186,21 @@ export default function Hero() {
 		if (!address) return;
 
 		try {
-			toast.info("Submitting Transaction...");
-			await writeAddCollateral({
+			toast.dark("Submitting Transaction...");
+			const hash = await writeAddCollateral({
 				address: process.env.NEXT_PUBLIC_LENDING_ADDRESS,
 				abi: abi.Lending_ABI,
 				functionName: "addCollateral",
 				value: parseEther(collateral),
 			});
 
-			toast.success("Transaction Success...");
+			await publicClient.waitForTransactionReceipt({ hash });
+
+			toast.dark("Transaction Success...");
 			setCollateral(0);
 			setUserPositionKey((k) => k + 1);
 		} catch (e) {
-			toast.error(
+			toast.dark(
 				e.shortMessage || e.message || e.cause.shortMessage || e.cause.message
 			);
 		}
@@ -210,19 +214,21 @@ export default function Hero() {
 		if (!address) return;
 
 		try {
-			toast.info("Submitting Transaction...");
-			await writeRemoveCollateral({
+			toast.dark("Submitting Transaction...");
+			const hash = await writeRemoveCollateral({
 				address: process.env.NEXT_PUBLIC_LENDING_ADDRESS,
 				abi: abi.Lending_ABI,
 				functionName: "withdrawCollateral",
 				args: [parseEther(collateral)],
 			});
 
-			toast.success("Transaction Success...");
+			await publicClient.waitForTransactionReceipt({ hash });
+
+			toast.dark("Transaction Success...");
 			setCollateral(0);
 			setUserPositionKey((k) => k + 1);
 		} catch (e) {
-			toast.error(
+			toast.dark(
 				e.shortMessage || e.message || e.cause.shortMessage || e.cause.message
 			);
 		}
@@ -236,19 +242,21 @@ export default function Hero() {
 		if (!address) return;
 
 		try {
-			toast.info("Submitting Transaction...");
-			await writeBorrow({
+			toast.dark("Submitting Transaction...");
+			const hash = await writeBorrow({
 				address: process.env.NEXT_PUBLIC_LENDING_ADDRESS,
 				abi: abi.Lending_ABI,
 				functionName: "borrowCorn",
 				args: [parseEther(borrowRepay)],
 			});
 
-			toast.success("Transaction Success...");
+			await publicClient.waitForTransactionReceipt({ hash });
+
+			toast.dark("Transaction Success...");
 			setBorrowRepay(0);
 			setUserPositionKey((k) => k + 1);
 		} catch (e) {
-			toast.error(
+			toast.dark(
 				e.shortMessage || e.message || e.cause.shortMessage || e.cause.message
 			);
 		}
@@ -262,26 +270,30 @@ export default function Hero() {
 		if (!address) return;
 
 		try {
-			toast.info("Submitting Transaction...");
-			await writeApprove({
+			toast.dark("Submitting Transaction...");
+			const hash = await writeApprove({
 				address: process.env.NEXT_PUBLIC_JCOL_ADDRESS,
 				abi: abi.JCOL_ABI,
 				functionName: "approve",
 				args: [process.env.NEXT_PUBLIC_LENDING_ADDRESS, parseEther(borrowRepay)],
 			});
 
-			await writeRepay({
+			await publicClient.waitForTransactionReceipt({ hash });
+
+			const hash2 = await writeRepay({
 				address: process.env.NEXT_PUBLIC_LENDING_ADDRESS,
 				abi: abi.Lending_ABI,
 				functionName: "repayCorn",
 				args: [parseEther(borrowRepay)],
 			});
 
-			toast.success("Transaction Success...");
+			await publicClient.waitForTransactionReceipt({ hash: hash2 });
+
+			toast.dark("Transaction Success...");
 			setBorrowRepay(0);
 			setUserPositionKey((k) => k + 1);
 		} catch (e) {
-			toast.error(
+			toast.dark(
 				e.shortMessage || e.message || e.cause.shortMessage || e.cause.message
 			);
 		}
@@ -295,8 +307,8 @@ export default function Hero() {
 		if (!address) return;
 
 		try {
-			toast.info("Submitting Transaction...");
-			await writeEthToToken({
+			toast.dark("Submitting Transaction...");
+			const hash = await writeEthToToken({
 				address: process.env.NEXT_PUBLIC_JCOLDEX_ADDRESS,
 				abi: abi.JCOLDEX_ABI,
 				functionName: "swap",
@@ -304,11 +316,13 @@ export default function Hero() {
 				value: parseEther(token),
 			});
 
-			toast.success("Transaction Success...");
+			await publicClient.waitForTransactionReceipt({ hash });
+
+			toast.dark("Transaction Success...");
 			setToken(0);
 			setUserPositionKey((k) => k + 1);
 		} catch (e) {
-			toast.error(
+			toast.dark(
 				e.shortMessage || e.message || e.cause.shortMessage || e.cause.message
 			);
 		}
@@ -323,27 +337,31 @@ export default function Hero() {
 		if (!address) return;
 
 		try {
-			toast.info("Submitting Transaction...");
+			toast.dark("Submitting Transaction...");
 
-			await writeApprove({
+			const hash = await writeApprove({
 				address: process.env.NEXT_PUBLIC_JCOL_ADDRESS,
 				abi: abi.JCOL_ABI,
 				functionName: "approve",
 				args: [process.env.NEXT_PUBLIC_JCOLDEX_ADDRESS, parseEther(token)],
 			});
 
-			await writeTokenToEth({
+			await publicClient.waitForTransactionReceipt({ hash });
+
+			const hash2 = await writeTokenToEth({
 				address: process.env.NEXT_PUBLIC_JCOLDEX_ADDRESS,
 				abi: abi.JCOLDEX_ABI,
 				functionName: "swap",
 				args: [parseEther(token)],
 			});
 
-			toast.success("Transaction Success...");
+			await publicClient.waitForTransactionReceipt({ hash: hash2 });
+
+			toast.dark("Transaction Success...");
 			setToken(0);
 			setUserPositionKey((k) => k + 1);
 		} catch (e) {
-			toast.error(
+			toast.dark(
 				e.shortMessage || e.message || e.cause.shortMessage || e.cause.message
 			);
 		}
@@ -436,7 +454,14 @@ export default function Hero() {
 						<p className='text-gray-400 text-lg'>Total Col/Bor</p>
 						<p className='text-2xl font-bold'>
 							{totalBorrowed && totalCollateral && readCurrentPrice
-								? (
+								? isNaN((
+									Number(
+										formatEther(
+											(Number(totalCollateral) * Number(readCurrentPrice)) /
+											Number(totalBorrowed)
+										)
+									) * 100
+								).toFixed(2)) ? "0" : (
 									Number(
 										formatEther(
 											(Number(totalCollateral) * Number(readCurrentPrice)) /

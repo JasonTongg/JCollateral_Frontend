@@ -25,7 +25,7 @@ const local = {
 const config = getDefaultConfig({
 	appName: "My RainbowKit App",
 	projectId: "0e50ad124798913a4af212355f956d06",
-	chains: [local],
+	chains: [sepolia],
 	ssr: true,
 });
 
